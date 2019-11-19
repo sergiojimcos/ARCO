@@ -32,6 +32,9 @@
 #include <math.h>
 #include <string.h>
 
+#define RED 0
+#define BLUE 1
+#define GREEN 2
 #define MAX_ITER 5000	// Máximo número de términos calculados en cada sucesión
 // Cuanto mayor sea MAX_ITER más calidad de imagen y mayor tiempo de ejecución
 #define RK 1000			// RK*RK número aproximado de puntos de la imagen
@@ -104,40 +107,47 @@ int main(int argc, char *argv[])	{
 		fprintf(f_imag, "P3\n%d %d\n255\n", width, height);
 		/* Formato P3: cada pixel se representa por sus valores de rojo, verde y azul (entre 0 y 255);
 		 * width x height: dimensión imagen en pixels */
-		
+		 
 		// B4. Se calcula el punto (x,y) y se determina si incluir (x + i·y) en el conjunto de Mandelbrot
-		
-		// B5. Se determina el color del pixel del número (x + y·i) y se imprime en el archivo private(x,y,xmin,ymax,xmax,ymin)
-		int values_img[height][width];
-		#pragma omp parallel for private(x,y,i,j)
-			for(i = 0; i < height; i++){
-				for(j = 0; j < width; j++) {
-					x = xmin + j/k; 
-					y = ymax - i/k;
-					
-					values_img[i][j] = mandel_val(x, y, MAX_ITER);
-				}
-			}
-		
+		// B5. Se determina el color del pixel del número (x + y·i) y se imprime en el archivo
+		unsigned char value_colours[width][height][3];
+		#pragma omp parallel private(x,y,i,j)
 		for(i = 0; i < height; i++){
 			for(j = 0; j < width; j++) {
-				value = values_img[i][j];	
-				if(value == -1)	{// se supone que (x+i·y) pertenece a M --> pixel blanco
-					fprintf(f_imag, " 0 0 0 ");
-				}
-				else
-					// se sabe que (x+i·y) no pertenece a M --> color del pixel según número de iteraciones
+				x = xmin + j/k; 
+				y = ymax - i/k; 
+				value = mandel_val(x, y, MAX_ITER);
+				
+				if(value == -1) {	// se supone que (x+i·y) pertenece a M --> pixel blanco
+					value_colours[i][j][RED]=255;
+					value_colours[i][j][BLUE]=255;
+					value_colours[i][j][GREEN]=255;
+ 
+				}else
+				// se sabe que (x+i·y) no pertenece a M --> color del pixel según número de iteraciones
 				{	value = ((float)value/MAX_ITER) * 16777215;
-						// Hacemos que value quede entre 0 y 2²⁴ y extraemos sus componentes rgb
-					valueg = value >> 8;	valueb = value % 256;
-					valuer = valueg >> 8;   valueg = valueg % 256;
-					fprintf(f_imag," %d %d %d ",valuer,valueg,valueb);
+					// Hacemos que value quede entre 0 y 2²⁴ y extraemos sus componentes rgb
+					//valueg = value >> 8;	valueb = value % 256;
+					//valuer = valueg >> 8;   valueg = valueg % 256;
+					
+					
+					value_colours[i][j][GREEN] = value >> 8;
+					value_colours[i][j][BLUE] = value % 256;
+					value_colours[i][j][RED] = value_colours[i][j][GREEN] >> 8;
+					value_colours[i][j][GREEN] = value_colours[i][j][GREEN] % 256;
+
 				}
 			}
 		}
-		//}
+		#pragma omp barrier
+		//#pragma omp parallel private(i,j)
+		for(i = 0; i < height; i++){
+			for(j = 0; j < width; j++) {
+				fprintf(f_imag," %d %d %d ",value_colours[i][j][RED],value_colours[i][j][GREEN],value_colours[i][j][BLUE]);
+			}
+		}
 		fprintf(f_imag, "\n");	fclose(f_imag);
-
+	
 		// B6. Informamos al usuario
 		printf("\n En el archivo %s se ha creado una imagen de la zona explorada", archivoppm);
 		printf("\n\n Tiempo empleado %0.2f segundos\n\n",omp_get_wtime()-t);
