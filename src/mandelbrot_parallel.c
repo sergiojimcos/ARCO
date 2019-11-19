@@ -65,6 +65,7 @@ int main(int argc, char *argv[])	{
 	double x,y,l,t;
 	char archivoppm[20];
 	FILE* filein;
+	int tt = 20;
 
 	// A. Abrir archivo de entrada y leer número de imágenes 	
 	if (argc == 2) {
@@ -111,6 +112,7 @@ int main(int argc, char *argv[])	{
 		// B4. Se calcula el punto (x,y) y se determina si incluir (x + i·y) en el conjunto de Mandelbrot
 		// B5. Se determina el color del pixel del número (x + y·i) y se imprime en el archivo
 		unsigned char value_colours[height][width][3];
+		//omp_set_num_threads(4);
 		#pragma omp parallel for private(x,y,i,j,value)
 		for(i = 0; i < height; i++){
 			for(j = 0; j < width; j++) {
@@ -127,10 +129,7 @@ int main(int argc, char *argv[])	{
 				// se sabe que (x+i·y) no pertenece a M --> color del pixel según número de iteraciones
 				{	value = ((float)value/MAX_ITER) * 16777215;
 					// Hacemos que value quede entre 0 y 2²⁴ y extraemos sus componentes rgb
-					//valueg = value >> 8;	valueb = value % 256;
-					//valuer = valueg >> 8;   valueg = valueg % 256;
-					
-					
+								
 					value_colours[i][j][GREEN] = value >> 8;
 					value_colours[i][j][BLUE] = value % 256;
 					value_colours[i][j][RED] = value_colours[i][j][GREEN] >> 8;
@@ -155,3 +154,13 @@ int main(int argc, char *argv[])	{
 	}	// fin de: for (imag = 0; imag <n; imag ++)
 	fclose(filein);	
 }
+
+/* In this case, we have to take into account several things in order to assert which 
+schedule will be the most optimal. In our case we have determined that is a dynamic, bacause the order
+of the threads are unknown, which means that the thread that is empty will take antoher segment of code. 
+However, the static schedule will order the threads, and if one of them finishes, it must wait until 
+the correspondace one. We have compared both types of schedule with the same tt (20) and the lowest value 
+is the dynamic, we have done it several times in order to obtain the average time. 
+
+We proved different values of tt and we establish a reange between 30-15 of tt that it is the length of the
+number of iterations that a thread done in cycle */
