@@ -110,8 +110,8 @@ int main(int argc, char *argv[])	{
 		 
 		// B4. Se calcula el punto (x,y) y se determina si incluir (x + i·y) en el conjunto de Mandelbrot
 		// B5. Se determina el color del pixel del número (x + y·i) y se imprime en el archivo
-		unsigned char value_colours[width][height][3];
-		#pragma omp parallel private(x,y,i,j)
+		unsigned char value_colours[height][width][3];
+		#pragma omp parallel for private(x,y,i,j,value)
 		for(i = 0; i < height; i++){
 			for(j = 0; j < width; j++) {
 				x = xmin + j/k; 
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])	{
 			}
 		}
 		#pragma omp barrier
-		//#pragma omp parallel private(i,j)
+		//#pragma omp parallel for private(i,j)
 		for(i = 0; i < height; i++){
 			for(j = 0; j < width; j++) {
 				fprintf(f_imag," %d %d %d ",value_colours[i][j][RED],value_colours[i][j][GREEN],value_colours[i][j][BLUE]);
