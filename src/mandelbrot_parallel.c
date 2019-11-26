@@ -113,7 +113,7 @@ int main(int argc, char *argv[])	{
 		// B5. Se determina el color del pixel del número (x + y·i) y se imprime en el archivo
 		unsigned char value_colours[height][width][3]; 
 		
-		#pragma omp parallel for private(x,y,i,j,value)schedule(dynamic,15)
+		#pragma omp parallel for private(x,y,i,j,value)
 		for(i = 0; i < height; i++){
 			for(j = 0; j < width; j++) {
 				x = xmin + j/k; 
