@@ -167,7 +167,7 @@ However, the static schedule will order the threads, and if one of them finishes
 the correspondace one. We have compared both types of schedule with the same tt (2-15) and the lowest value 
 is the dynamic, we have done it several times in order to obtain the average time.
 
-As well as, The dynamic scheduling type has higher overhead then the static scheduling type because it 
+As well as, the dynamic scheduling type has higher overhead then the static scheduling type because it 
 dynamically distributes the iterations during the runtime.
 
 +--------+------+------+------+---------+			
