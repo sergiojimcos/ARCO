@@ -32,9 +32,9 @@
 #include <math.h>
 #include <string.h>
 
-#define RED 0
-#define BLUE 1
-#define GREEN 2
+#define R 0 //red colour 
+#define B 1 //blue colour 
+#define G 2 //green colour 
 #define MAX_ITER 5000	// Máximo número de términos calculados en cada sucesión
 // Cuanto mayor sea MAX_ITER más calidad de imagen y mayor tiempo de ejecución
 #define RK 1000			// RK*RK número aproximado de puntos de la imagen
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])	{
 	double x,y,l,t;
 	char archivoppm[20];
 	FILE* filein;
-	int tt = 20;
+	int tt = 2;
 
 	// A. Abrir archivo de entrada y leer número de imágenes 	
 	if (argc == 2) {
@@ -111,9 +111,9 @@ int main(int argc, char *argv[])	{
 		 
 		// B4. Se calcula el punto (x,y) y se determina si incluir (x + i·y) en el conjunto de Mandelbrot
 		// B5. Se determina el color del pixel del número (x + y·i) y se imprime en el archivo
-		unsigned char value_colours[height][width][3];
-		//omp_set_num_threads(4);
-		#pragma omp parallel for private(x,y,i,j,value)
+		unsigned char value_colours[height][width][3]; 
+		
+		#pragma omp parallel for private(x,y,i,j,value)schedule(dynamic,15)
 		for(i = 0; i < height; i++){
 			for(j = 0; j < width; j++) {
 				x = xmin + j/k; 
@@ -121,28 +121,28 @@ int main(int argc, char *argv[])	{
 				value = mandel_val(x, y, MAX_ITER);
 				
 				if(value == -1) {	// se supone que (x+i·y) pertenece a M --> pixel blanco
-					value_colours[i][j][RED]=255;
-					value_colours[i][j][BLUE]=255;
-					value_colours[i][j][GREEN]=255;
+					value_colours[i][j][R]=255;
+					value_colours[i][j][B]=255;
+					value_colours[i][j][G]=255;
  
 				}else
 				// se sabe que (x+i·y) no pertenece a M --> color del pixel según número de iteraciones
 				{	value = ((float)value/MAX_ITER) * 16777215;
 					// Hacemos que value quede entre 0 y 2²⁴ y extraemos sus componentes rgb
 								
-					value_colours[i][j][GREEN] = value >> 8;
-					value_colours[i][j][BLUE] = value % 256;
-					value_colours[i][j][RED] = value_colours[i][j][GREEN] >> 8;
-					value_colours[i][j][GREEN] = value_colours[i][j][GREEN] % 256;
+					value_colours[i][j][G] = value >> 8;
+					value_colours[i][j][B] = value % 256;
+					value_colours[i][j][R] = value_colours[i][j][G] >> 8;
+					value_colours[i][j][G] = value_colours[i][j][G] % 256;
 
 				}
 			}
 		}
 		#pragma omp barrier
-		//#pragma omp parallel for private(i,j)
+		
 		for(i = 0; i < height; i++){
 			for(j = 0; j < width; j++) {
-				fprintf(f_imag," %d %d %d ",value_colours[i][j][RED],value_colours[i][j][GREEN],value_colours[i][j][BLUE]);
+				fprintf(f_imag," %d %d %d ",value_colours[i][j][R],value_colours[i][j][G],value_colours[i][j][B]);
 			}
 		}
 		fprintf(f_imag, "\n");	fclose(f_imag);
@@ -155,12 +155,38 @@ int main(int argc, char *argv[])	{
 	fclose(filein);	
 }
 
-/* In this case, we have to take into account several things in order to assert which 
-schedule will be the most optimal. In our case we have determined that is a dynamic, bacause the order
-of the threads are unknown, which means that the thread that is empty will take antoher segment of code. 
-However, the static schedule will order the threads, and if one of them finishes, it must wait until 
-the correspondace one. We have compared both types of schedule with the same tt (20) and the lowest value 
-is the dynamic, we have done it several times in order to obtain the average time. 
+/* 
+First of all, we have decided in order to use an unsigned character matrix because we suppose that it will
+need less capacity for our porpose and could be more efficient due to we are saving characters that indicates
+the colours of each pixel.
 
-We proved different values of tt and we establish a reange between 30-15 of tt that it is the length of the
+In this case, we have to take into account several things in order to assert which 
+schedule will be the most optimal. In our case we have determined that is a dynamic, bacause the order
+of the threads are unknown, which means that the thread that is empty will take another segment of code. 
+However, the static schedule will order the threads, and if one of them finishes, it must wait until 
+the correspondace one. We have compared both types of schedule with the same tt (2-15) and the lowest value 
+is the dynamic, we have done it several times in order to obtain the average time.
+
+As well as, The dynamic scheduling type has higher overhead then the static scheduling type because it 
+dynamically distributes the iterations during the runtime.
+
++--------+------+------+------+---------+			
+| STATIC | IT1  | IT2  | IT3  | AVERAGE |
++--------+------+------+------+---------+
+| TT=2   | 5.54 | 5.52 | 5.58 |    5.54 |
+| TT=5   | 5.64 | 5.81 | 5.80 |    5.75 |
+| TT=10  | 5.93 | 5.90 | 5.91 |    5.91 |
+| TT=15  | 5.95 | 5.96 | 5.85 |    5.92 |		
++--------+------+------+------+---------+ 			
+
++---------+------+------+------+---------+
+| DYNAMIC | IT1  | IT2  | IT3  | AVERAGE |
++---------+------+------+------+---------+
+| TT=2    | 5.34 | 5.38 | 5.36 |    5.36 |
+| TT=5    | 5.39 | 5.45 | 5.35 |    5.39 |
+| TT=10   | 5.37 | 5.44 | 5.73 |    5.51 |
+| TT=15   | 5.43 | 6.11 | 5.85 |    5.79 |
++---------+------+------+------+---------+
+
+We proved different values of tt and we establish a reange between 2-15 of tt that it is the length of the
 number of iterations that a thread done in cycle */
