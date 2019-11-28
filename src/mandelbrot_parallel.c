@@ -156,38 +156,39 @@ int main(int argc, char *argv[])	{
 }
 
 /* 
-First of all, we have decided in order to use an unsigned character matrix because we suppose that it will
-need less capacity for our porpose and could be more efficient due to we are saving characters that indicates
+First of all, we have decided in order to use an unsigned char matrix because we suppose that it will
+need less memory capacity for our porpuse and it could be more efficient due to we are saving characters that only indicates
 the colours of each pixel. In this case, we have used a tridimensional matrix in order to clasiffy each pixel depending 
-on the mandelbrot's value.
+on the mandelbrot's value, the position and the colour of the pixel.
 
 In this case, we have to take into account several things in order to assert which 
 schedule will be the most optimal. In our case we have determined that is a dynamic, bacause the order
-of the threads are unknown, which means that the thread that is empty will take another segment of code. 
-However, the static schedule will order the threads, and if one of them finishes, it must wait until 
+of the threads are unknown, which means that if a thread is empty, it will take another segment of code. 
+However, the static schedule will spend a small time sorting the threads, and if one of them finishes, it must wait until 
 the correspondace one. We have compared both types of schedule with the same tt (2-15) and the lowest value 
-is the dynamic, we have done it several times in order to obtain the average time.
+is the dynamic one. We made a table for comparing the average time of each iteration.
 
-As well as, the dynamic scheduling type has higher overhead then the static scheduling type because it 
+As well as, the dynamic scheduling type has higher overhead than the static scheduling type because it 
 dynamically distributes the iterations during the runtime.
 
 +--------+------+------+------+---------+			
 | STATIC | IT1  | IT2  | IT3  | AVERAGE |
 +--------+------+------+------+---------+
-| TT=2   | 5.54 | 5.52 | 5.58 |    5.54 |
-| TT=5   | 5.64 | 5.81 | 5.80 |    5.75 |
-| TT=10  | 5.93 | 5.90 | 5.91 |    5.91 |
-| TT=15  | 5.95 | 5.96 | 5.85 |    5.92 |		
+| TT=2   | 5.54s| 5.52s| 5.58s|    5.54s|
+| TT=5   | 5.64s| 5.81s| 5.80s|    5.75s|
+| TT=10  | 5.93s| 5.90s| 5.91s|    5.91s|
+| TT=15  | 5.95s| 5.96s| 5.85s|    5.92s|		
 +--------+------+------+------+---------+ 			
 
 +---------+------+------+------+---------+
 | DYNAMIC | IT1  | IT2  | IT3  | AVERAGE |
 +---------+------+------+------+---------+
-| TT=2    | 5.34 | 5.38 | 5.36 |    5.36 |
-| TT=5    | 5.39 | 5.45 | 5.35 |    5.39 |
-| TT=10   | 5.37 | 5.44 | 5.73 |    5.51 |
-| TT=15   | 5.43 | 6.11 | 5.85 |    5.79 |
+| TT=2    | 5.34s| 5.38s| 5.36s|    5.36s|
+| TT=5    | 5.39s| 5.45s| 5.35s|    5.39s|
+| TT=10   | 5.37s| 5.44s| 5.73s|    5.51s|
+| TT=15   | 5.43s| 6.11s| 5.85s|    5.79s|
 +---------+------+------+------+---------+
 
-We proved different values of tt and we establish a reange between 2-15 of tt that it is the length of the
-number of iterations that a thread done in cycle */
+We proved different values of tt and we establish a range between 2-15 that it is the length of the
+number of iterations that a thread done in cycle. The number of threads depends on the number of cores that
+you have in your porcessor. This result are executed with a processor of 2 cores. Intel I7-6500u. */
