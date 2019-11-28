@@ -111,9 +111,9 @@ int main(int argc, char *argv[])	{
 		 
 		// B4. Se calcula el punto (x,y) y se determina si incluir (x + i·y) en el conjunto de Mandelbrot
 		// B5. Se determina el color del pixel del número (x + y·i) y se imprime en el archivo
-		unsigned char value_colours[height][width][3]; 
+		unsigned char value_colours[height][width][3]; //The number 3 determines number of colours that are: RED, GREEN AND BLUE
 		
-		#pragma omp parallel for private(x,y,i,j,value)
+		#pragma omp parallel for private(x,y,i,j,value)schedule(dynamic, tt)
 		for(i = 0; i < height; i++){
 			for(j = 0; j < width; j++) {
 				x = xmin + j/k; 
@@ -158,7 +158,8 @@ int main(int argc, char *argv[])	{
 /* 
 First of all, we have decided in order to use an unsigned character matrix because we suppose that it will
 need less capacity for our porpose and could be more efficient due to we are saving characters that indicates
-the colours of each pixel.
+the colours of each pixel. In this case, we have used a tridimensional matrix in order to clasiffy each pixel depending 
+on the mandelbrot's value.
 
 In this case, we have to take into account several things in order to assert which 
 schedule will be the most optimal. In our case we have determined that is a dynamic, bacause the order
