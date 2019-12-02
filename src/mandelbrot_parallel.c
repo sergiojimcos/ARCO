@@ -110,7 +110,6 @@ int main(int argc, char *argv[])	{
 		 * width x height: dimensión imagen en pixels */
 		 
 		// B4. Se calcula el punto (x,y) y se determina si incluir (x + i·y) en el conjunto de Mandelbrot
-		// B5. Se determina el color del pixel del número (x + y·i) y se imprime en el archivo
 		unsigned char value_colours[height][width][3]; //The number 3 determines number of colours that are: RED, GREEN AND BLUE
 		
 		#pragma omp parallel for private(x,y,i,j,value)schedule(dynamic, tt)
@@ -139,7 +138,7 @@ int main(int argc, char *argv[])	{
 			}
 		}
 		#pragma omp barrier
-		
+		// B5. Se determina el color del pixel del número (x + y·i) y se imprime en el archivo
 		for(i = 0; i < height; i++){
 			for(j = 0; j < width; j++) {
 				fprintf(f_imag," %d %d %d ",value_colours[i][j][R],value_colours[i][j][G],value_colours[i][j][B]);
@@ -157,16 +156,15 @@ int main(int argc, char *argv[])	{
 
 /* 
 First of all, we have decided in order to use an unsigned char matrix because we suppose that it will
-need less memory capacity for our porpuse and it could be more efficient due to we are saving characters that only indicates
-the colours of each pixel. In this case, we have used a tridimensional matrix in order to clasiffy each pixel depending 
-on the mandelbrot's value, the position and the colour of the pixel.
+need less memory capacity for our task. In this case, we have used a tridimensional matrix in order to clasiffy 
+each pixel depending on the mandelbrot's value, the position and the colour of the pixel.
 
 In this case, we have to take into account several things in order to assert which 
-schedule will be the most optimal. In our case we have determined that is a dynamic, bacause the order
+schedule will be the most optimal. In our case we have determined that was dynamic, bacause the order
 of the threads are unknown, which means that if a thread is empty, it will take another segment of code. 
-However, the static schedule will spend a small time sorting the threads, and if one of them finishes, it must wait until 
-the correspondace one. We have compared both types of schedule with the same tt (2-15) and the lowest value 
-is the dynamic one. We made a table for comparing the average time of each iteration.
+However, the static schedule will spend a small time sorting the threads, and if one of them have finished, it must wait until 
+the correspondance one. We have compared both types of schedule with the several tt values [2-15] and the lowest value 
+is the dynamic one. We made a table for comparing the average time of each iteration (three iterations).
 
 As well as, the dynamic scheduling type has higher overhead than the static scheduling type because it 
 dynamically distributes the iterations during the runtime.
@@ -189,6 +187,8 @@ dynamically distributes the iterations during the runtime.
 | TT=15   | 5.43s| 6.11s| 5.85s|    5.79s|
 +---------+------+------+------+---------+
 
-We proved different values of tt and we establish a range between 2-15 that it is the length of the
-number of iterations that a thread done in cycle. The number of threads depends on the number of cores that
-you have in your porcessor. This result are executed with a processor of 2 cores. Intel I7-6500u. */
+The number of threads depends on the number of cores that you have in your processor. 
+These results are executed with a Intel I7-6500 processor. We have also taken into account that sometimes there are
+several values that doesn't have any sense because the time that is executed depends on the availability of the threads.
+This means that there will be some threads that carries out several instructions in the Operating System and not in the 
+execution of this task.  */
